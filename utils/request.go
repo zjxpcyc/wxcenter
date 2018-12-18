@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -12,15 +11,12 @@ import (
 
 // Request 请求远程数据
 func Request(method, addr string, query url.Values, body io.Reader) (result map[string]interface{}, err error) {
-	// 请求 Body
-	var bodyData io.Reader
-	if method != http.MethodGet && body != nil {
-		bodyData = body
+	mth := strings.ToUpper(method)
 
-		b := &bytes.Buffer{}
-		io.Copy(b, body)
-	} else {
-		bodyData = nil
+	// 请求 Body
+	var bodyReader = body
+	if mth == http.MethodGet {
+		bodyReader = nil
 	}
 
 	// 请求参数
@@ -39,7 +35,7 @@ func Request(method, addr string, query url.Values, body io.Reader) (result map[
 	var res *http.Response
 	client := new(http.Client)
 
-	req, err = http.NewRequest(method, addr, bodyData)
+	req, err = http.NewRequest(mth, addr, bodyReader)
 	if err != nil {
 		return
 	}
@@ -55,6 +51,8 @@ func Request(method, addr string, query url.Values, body io.Reader) (result map[
 	if err != nil {
 		return
 	}
+
+	logger.Info("远程请求结果: ", string(data))
 
 	// 格式化结果
 	err = json.Unmarshal(data, &result)

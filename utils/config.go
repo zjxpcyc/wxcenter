@@ -29,7 +29,7 @@ func ConfInit() {
 	return
 }
 
-// Get 配置读取
-func Get(key string) gjson.Result {
+// GetConf 配置读取
+func GetConf(key string) gjson.Result {
 	return Configer.Get(key)
 }

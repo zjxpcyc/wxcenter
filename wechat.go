@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -29,7 +31,7 @@ type Scheduler struct {
 
 // Result 实现 wechat.v2 Scheduler 接口
 func (t *Scheduler) Result() string {
-	config := utils.Get("callback")
+	config := utils.GetConf("callback")
 	res, err := utils.Request(config.Get("method").String(), t.url, nil, nil)
 	if err != nil {
 		logger.Error("获取 " + t.url + " 结果出错: " + err.Error())
@@ -47,7 +49,7 @@ func (t *Scheduler) Result() string {
 
 // NewScheduler new Scheduler
 func NewScheduler(appid string, typ int) *Scheduler {
-	config := utils.Get("callback")
+	config := utils.GetConf("callback")
 	addr := config.Get("url").String()
 
 	addr = strings.Replace(addr, "{appid}", appid, -1)
@@ -85,7 +87,7 @@ func RegisterWxClient(appid string, cert map[string]string) {
 	cli.SetAccessToken(NewScheduler(appid, jobs.JOB_ACCESS_TOKEN))
 	cli.SetAccessToken(NewScheduler(appid, jobs.JOB_JSAPI_TICKET))
 
-	logger.Info("注册微信公众号服务 appid=" + appid)
+	logger.Info("注册公众号服务成功 appid=" + appid)
 }
 
 // RegisterWxMiniClient 小程序注册
@@ -128,23 +130,39 @@ func GetMiniClient(appid string) (*mini.Client, error) {
 // registeWxScheduler 注册定时任务
 // 注册 access-token 与 jsapi_ticket
 func registeWxScheduler(appid string, cert map[string]string) {
-	params := `
-{
-	"appid": "` + appid + `",
-	"appsecret": "` + cert["secret"] + `",
-	"tasks": [
-		{
-			"type": 0,
+	params := map[string]interface{}{
+		"appid":     appid,
+		"appsecret": cert["secret"],
+		"tasks": []map[string]int{
+			map[string]int{
+				"type": 0,
+			},
+			map[string]int{
+				"type": 1,
+			},
 		},
-		{
-			"type": 1,
-		},
-	]
-}
-	`
+	}
 
-	config := utils.Get("registe")
-	utils.Request(config.Get("method").String(), config.Get("url").String(), nil, strings.NewReader(params))
+	paramsBytes, _ := json.Marshal(params)
+	paramsStr := string(paramsBytes)
+
+	logger.Info("开始注册定时任务 ...")
+	logger.Info("注册内容: " + paramsStr)
+
+	config := utils.GetConf("registe")
+	res, err := utils.Request(config.Get("method").String(), config.Get("url").String(), nil, strings.NewReader(paramsStr))
+	if err != nil {
+		logger.Error("注册定时任务失败: " + err.Error())
+	}
+
+	var code int
+	if c, ok := res["code"]; ok {
+		code = int(c.(float64))
+	}
+	if code != http.StatusOK {
+		logger.Error("注册定时任务失败: " + res["message"].(string))
+		logger.Error(fmt.Sprintf("错误详情: %v", res))
+	}
 }
 
 // WechatInit 微信初始化

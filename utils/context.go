@@ -31,12 +31,6 @@ func (c *Context) GetParam(k string) string {
 }
 
 func (c *Context) Response(data interface{}, code ...int) {
-	defer func() {
-		if err := recover(); err != nil {
-			return
-		}
-	}()
-
 	status := http.StatusOK
 	if code != nil && len(code) > 0 {
 		status = code[0]
