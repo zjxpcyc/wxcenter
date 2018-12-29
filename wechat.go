@@ -85,7 +85,7 @@ func RegisterWxClient(appid string, cert map[string]string) {
 	registeWxScheduler(appid, cert)
 	// 启动定时任务
 	cli.SetAccessToken(NewScheduler(appid, jobs.JOB_ACCESS_TOKEN))
-	cli.SetAccessToken(NewScheduler(appid, jobs.JOB_JSAPI_TICKET))
+	cli.SetJSAPITicket(NewScheduler(appid, jobs.JOB_JSAPI_TICKET))
 
 	logger.Info("注册公众号服务成功 appid=" + appid)
 }
