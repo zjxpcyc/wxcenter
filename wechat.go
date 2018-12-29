@@ -138,7 +138,7 @@ func registeWxScheduler(appid string, cert map[string]string) {
 				"type": 0,
 			},
 			map[string]int{
-				"type": 1,
+				"type": 2,
 			},
 		},
 	}
