@@ -145,6 +145,8 @@ func (t *Router) Jssdk(w http.ResponseWriter, r *http.Request) {
 		ctx.Response(err)
 	}
 
+	logger.Info("获取到分享链接 - ", link)
+
 	res := wxCli.GetJSTicketSignature(link)
 	ctx.Response(res)
 }
